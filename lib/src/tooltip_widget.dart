@@ -21,12 +21,10 @@
  */
 
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 import 'enum.dart';
-import 'extension.dart';
 import 'get_position.dart';
 import 'measure_size.dart';
 
@@ -35,7 +33,7 @@ const _kDefaultPaddingFromParent = 14.0;
 class ToolTipWidget extends StatefulWidget {
   final GetPosition? position;
   final Offset? offset;
-  final Size screenSize;
+  final Size? screenSize;
   final String? title;
   final TextAlign? titleAlignment;
   final String? description;
@@ -124,16 +122,12 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
         position.dy + ((widget.position?.getHeight() ?? 0) / 2);
     final topPosition = position.dy - ((widget.position?.getHeight() ?? 0) / 2);
     final hasSpaceInTop = topPosition >= height;
-    // TODO: need to update for flutter version > 3.8.X
-    // ignore: deprecated_member_use
     final EdgeInsets viewInsets = EdgeInsets.fromWindowPadding(
-      // ignore: deprecated_member_use
-      ambiguate(WidgetsBinding.instance)?.window.viewInsets ?? ViewPadding.zero,
-      // ignore: deprecated_member_use
-      ambiguate(WidgetsBinding.instance)?.window.devicePixelRatio ?? 1,
-    );
+        WidgetsBinding.instance.window.viewInsets,
+        WidgetsBinding.instance.window.devicePixelRatio);
     final double actualVisibleScreenHeight =
-        widget.screenSize.height - viewInsets.bottom;
+        (widget.screenSize?.height ?? MediaQuery.of(context).size.height) -
+            viewInsets.bottom;
     final hasSpaceInBottom =
         (actualVisibleScreenHeight - bottomPosition) >= height;
     return widget.tooltipPosition ??
@@ -168,8 +162,8 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
             (widget.descriptionPadding?.right ?? 0) +
             (widget.descriptionPadding?.left ?? 0));
     var maxTextWidth = max(titleLength, descriptionLength);
-    if (maxTextWidth > widget.screenSize.width - tooltipScreenEdgePadding) {
-      tooltipWidth = widget.screenSize.width - tooltipScreenEdgePadding;
+    if (maxTextWidth > widget.screenSize!.width - tooltipScreenEdgePadding) {
+      tooltipWidth = widget.screenSize!.width - tooltipScreenEdgePadding;
     } else {
       tooltipWidth = maxTextWidth + tooltipTextPadding;
     }
@@ -180,7 +174,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
       final width =
           widget.container != null ? _customContainerWidth.value : tooltipWidth;
       double leftPositionValue = widget.position!.getCenter() - (width * 0.5);
-      if ((leftPositionValue + width) > widget.screenSize.width) {
+      if ((leftPositionValue + width) > MediaQuery.of(context).size.width) {
         return null;
       } else if ((leftPositionValue) < _kDefaultPaddingFromParent) {
         return _kDefaultPaddingFromParent;
@@ -197,10 +191,10 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
           widget.container != null ? _customContainerWidth.value : tooltipWidth;
 
       final left = _getLeft();
-      if (left == null || (left + width) > widget.screenSize.width) {
+      if (left == null || (left + width) > MediaQuery.of(context).size.width) {
         final rightPosition = widget.position!.getCenter() + (width * 0.5);
 
-        return (rightPosition + width) > widget.screenSize.width
+        return (rightPosition + width) > MediaQuery.of(context).size.width
             ? _kDefaultPaddingFromParent
             : null;
       } else {
@@ -212,8 +206,8 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
 
   double _getSpace() {
     var space = widget.position!.getCenter() - (widget.contentWidth! / 2);
-    if (space + widget.contentWidth! > widget.screenSize.width) {
-      space = widget.screenSize.width - widget.contentWidth! - 8;
+    if (space + widget.contentWidth! > widget.screenSize!.width) {
+      space = widget.screenSize!.width - widget.contentWidth! - 8;
     } else if (space < (widget.contentWidth! / 2)) {
       space = 16;
     }
@@ -226,7 +220,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
         ? 0
         : (widget.position!.getCenter() - calculatedLeft);
     var right = _getLeft() == null
-        ? (widget.screenSize.width - widget.position!.getCenter()) -
+        ? (MediaQuery.of(context).size.width - widget.position!.getCenter()) -
             (_getRight() ?? 0)
         : 0;
     final containerWidth =
@@ -314,14 +308,8 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
 
   @override
   void didChangeDependencies() {
+    _getTooltipWidth();
     super.didChangeDependencies();
-    _getTooltipWidth();
-  }
-
-  @override
-  void didUpdateWidget(covariant ToolTipWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _getTooltipWidth();
   }
 
   @override
@@ -551,7 +539,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
 
   double? _getArrowRight(double arrowWidth) {
     if (_getLeft() != null) return null;
-    return (widget.screenSize.width - widget.position!.getCenter()) -
+    return (MediaQuery.of(context).size.width - widget.position!.getCenter()) -
         (_getRight() ?? 0) -
         (arrowWidth / 2);
   }

@@ -20,99 +20,78 @@
  * SOFTWARE.
  */
 
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class GetPosition {
-  GetPosition({
-    required this.key,
-    required this.screenWidth,
-    required this.screenHeight,
-    this.padding = EdgeInsets.zero,
-    this.rootRenderObject,
-  }) {
-    getRenderBox();
-  }
-
-  final GlobalKey key;
+  final GlobalKey? key;
   final EdgeInsets padding;
-  final double screenWidth;
-  final double screenHeight;
-  final RenderObject? rootRenderObject;
+  final double? screenWidth;
+  final double? screenHeight;
 
-  late final RenderBox? _box;
-  late final Offset? _boxOffset;
-
-  void getRenderBox() {
-    var renderBox = key.currentContext?.findRenderObject() as RenderBox?;
-
-    if (renderBox == null) return;
-
-    _box = renderBox;
-    _boxOffset = _box?.localToGlobal(
-      Offset.zero,
-      ancestor: rootRenderObject,
-    );
-  }
-
-  bool _checkBoxOrOffsetIsNull({bool checkDy = false, bool checkDx = false}) {
-    return _box == null ||
-        _boxOffset == null ||
-        (checkDx && (_boxOffset?.dx.isNaN ?? true)) ||
-        (checkDy && (_boxOffset?.dy.isNaN ?? true));
-  }
+  GetPosition({
+    this.key,
+    this.padding = EdgeInsets.zero,
+    this.screenWidth,
+    this.screenHeight,
+  });
 
   Rect getRect() {
-    if (_checkBoxOrOffsetIsNull(checkDy: true, checkDx: true)) {
-      return Rect.zero;
+    final box = key!.currentContext!.findRenderObject() as RenderBox;
+
+    var boxOffset = box.localToGlobal(const Offset(0.0, 0.0));
+    if (boxOffset.dx.isNaN || boxOffset.dy.isNaN) {
+      return const Rect.fromLTRB(0, 0, 0, 0);
     }
-    final topLeft = _box!.size.topLeft(_boxOffset!);
-    final bottomRight = _box!.size.bottomRight(_boxOffset!);
-    final leftDx = topLeft.dx - padding.left;
-    final leftDy = topLeft.dy - padding.top;
+    final topLeft = box.size.topLeft(boxOffset);
+    final bottomRight = box.size.bottomRight(boxOffset);
+
     final rect = Rect.fromLTRB(
-      leftDx.clamp(0, leftDx),
-      leftDy.clamp(0, leftDy),
-      min(bottomRight.dx + padding.right, screenWidth),
-      min(bottomRight.dy + padding.bottom, screenHeight),
+      topLeft.dx - padding.left < 0 ? 0 : topLeft.dx - padding.left,
+      topLeft.dy - padding.top < 0 ? 0 : topLeft.dy - padding.top,
+      bottomRight.dx + padding.right > screenWidth!
+          ? screenWidth!
+          : bottomRight.dx + padding.right,
+      bottomRight.dy + padding.bottom > screenHeight!
+          ? screenHeight!
+          : bottomRight.dy + padding.bottom,
     );
     return rect;
   }
 
   ///Get the bottom position of the widget
   double getBottom() {
-    if (_checkBoxOrOffsetIsNull(checkDy: true)) {
-      return padding.bottom;
-    }
-    final bottomRight = _box!.size.bottomRight(_boxOffset!);
+    final box = key!.currentContext!.findRenderObject() as RenderBox;
+    final boxOffset = box.localToGlobal(const Offset(0.0, 0.0));
+    if (boxOffset.dy.isNaN) return padding.bottom;
+    final bottomRight = box.size.bottomRight(boxOffset);
     return bottomRight.dy + padding.bottom;
   }
 
   ///Get the top position of the widget
   double getTop() {
-    if (_checkBoxOrOffsetIsNull(checkDy: true)) {
-      return -padding.top;
-    }
-    final topLeft = _box!.size.topLeft(_boxOffset!);
+    final box = key!.currentContext!.findRenderObject() as RenderBox;
+    final boxOffset = box.localToGlobal(const Offset(0.0, 0.0));
+    if (boxOffset.dy.isNaN) return 0 - padding.top;
+    final topLeft = box.size.topLeft(boxOffset);
     return topLeft.dy - padding.top;
   }
 
   ///Get the left position of the widget
   double getLeft() {
-    if (_checkBoxOrOffsetIsNull(checkDx: true)) {
-      return -padding.left;
-    }
-    final topLeft = _box!.size.topLeft(_boxOffset!);
+    final box = key!.currentContext!.findRenderObject() as RenderBox;
+    final boxOffset = box.localToGlobal(const Offset(0.0, 0.0));
+    if (boxOffset.dx.isNaN) return 0 - padding.left;
+    final topLeft = box.size.topLeft(boxOffset);
     return topLeft.dx - padding.left;
   }
 
   ///Get the right position of the widget
   double getRight() {
-    if (_checkBoxOrOffsetIsNull(checkDx: true)) {
-      return padding.right;
-    }
-    final bottomRight = _box!.size.bottomRight(_boxOffset!);
+    final box = key!.currentContext!.findRenderObject() as RenderBox;
+    final boxOffset = box.localToGlobal(const Offset(0.0, 0.0));
+    if (boxOffset.dx.isNaN) return padding.right;
+    final bottomRight =
+        box.size.bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
     return bottomRight.dx + padding.right;
   }
 
@@ -120,5 +99,5 @@ class GetPosition {
 
   double getWidth() => getRight() - getLeft();
 
-  double getCenter() => (getLeft() + getRight()) * 0.5;
+  double getCenter() => (getLeft() + getRight()) / 2;
 }

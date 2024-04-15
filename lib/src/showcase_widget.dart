@@ -23,7 +23,6 @@
 import 'package:flutter/material.dart';
 
 import '../showcaseview.dart';
-import 'extension.dart';
 
 class ShowCaseWidget extends StatefulWidget {
   final Builder builder;
@@ -123,9 +122,6 @@ class ShowCaseWidget extends StatefulWidget {
 class ShowCaseWidgetState extends State<ShowCaseWidget> {
   List<GlobalKey>? ids;
   int? activeWidgetId;
-  RenderBox? rootRenderObject;
-  Size? rootWidgetSize;
-  Key? anchoredOverlayKey;
 
   /// These properties are only here so that it can be accessed by
   /// [Showcase]
@@ -145,27 +141,8 @@ class ShowCaseWidgetState extends State<ShowCaseWidget> {
 
   bool get enableShowcase => widget.enableShowcase;
 
-  bool get isShowCaseCompleted => ids == null && activeWidgetId == null;
-
   /// Returns value of [ShowCaseWidget.blurValue]
   double get blurValue => widget.blurValue;
-
-  @override
-  void initState() {
-    super.initState();
-    initRootWidget();
-  }
-
-  void initRootWidget() {
-    ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((_) {
-      final rootWidget = context.findAncestorStateOfType<State<WidgetsApp>>();
-      rootRenderObject = rootWidget?.context.findRenderObject() as RenderBox?;
-      rootWidgetSize = rootWidget == null
-          ? MediaQuery.of(context).size
-          : rootRenderObject?.size;
-      anchoredOverlayKey = UniqueKey();
-    });
-  }
 
   /// Starts Showcase view from the beginning of specified list of widget ids.
   /// If this function is used when showcase has been disabled then it will
