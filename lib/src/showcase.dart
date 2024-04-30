@@ -419,8 +419,8 @@ class _ShowcaseState extends State<Showcase> {
           position = GetPosition(
             key: widget.key,
             padding: widget.targetPadding,
-            screenWidth: size.width+100,
-            screenHeight: size.height+50,
+            screenWidth: size.width,
+            screenHeight: size.height,
           );
           return buildOverlayOnTarget(offset, rectBound.size, rectBound, size);
         },
